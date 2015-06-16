@@ -23,7 +23,11 @@ public class InstallKCauldron extends DefaultTask {
         artifact = Aether.resolveLatestVersion(artifact);
         System.out.println(artifact.getVersion());
         System.out.println("Server directory: " + serverDir.getAbsolutePath());
-        return Sync.syncArtifact(new LibraryArtifact(artifact, ".", null), serverDir, true);
+        boolean legacy = Sync.getInfo(artifact.getFile()).legacy;
+        if (legacy) {
+            System.out.println("Found legacy server jar");
+        }
+        return Sync.syncArtifact(new LibraryArtifact(artifact, legacy ? "." : null, null), legacy ? serverDir : Sync.binDir(serverDir), true);
     }
 
     private static String shorthand(String s) {

@@ -3,6 +3,8 @@ package pw.prok.bootstrap;
 import org.eclipse.aether.artifact.Artifact;
 import org.eclipse.aether.artifact.DefaultArtifact;
 
+import java.io.File;
+
 public final class LibraryArtifact {
     private Artifact mArtifact;
     private final String mLocation;
@@ -84,5 +86,9 @@ public final class LibraryArtifact {
 
     public void setArtifact(Artifact artifact) {
         mArtifact = artifact;
+    }
+
+    public File getTarget(File rootDir) {
+        return new File(new File(rootDir, getRealLocation()), getRealFilename());
     }
 }

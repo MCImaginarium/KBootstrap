@@ -14,6 +14,7 @@ public class Main {
     public final Option installKCauldron;
     public final Option runKCauldron;
     public final Option installServer;
+    public final Option runServer;
     public final Option libraries;
 
     public final CommandLineParser parser;
@@ -47,6 +48,10 @@ public class Main {
         installServer.setArgName("server file or url");
         options.addOption(installServer);
 
+        runServer = new Option("c", "runServer", true, "Install & run custom server");
+        runServer.setArgName("server file or url");
+        options.addOption(runServer);
+
         libraries = new Option("l", "libraries", true, "Install specified libraries into server dir");
         libraries.setArgName("libraries");
         libraries.setValueSeparator(';');
@@ -74,6 +79,9 @@ public class Main {
             }
             if (cli.hasOption(installServer.getOpt())) {
                 run(new InstallServer());
+            }
+            if (cli.hasOption(runServer.getOpt())) {
+                run(new RunServer());
             }
             if (!wasExecuted) {
                 printHelp();

@@ -94,6 +94,7 @@ public class Utils {
     }
 
     public static void copyFile(File in, File out) throws IOException {
+        out.getParentFile().mkdirs();
         copyStream(new FileInputStream(in), new FileOutputStream(out));
     }
 

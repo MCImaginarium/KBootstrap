@@ -1,5 +1,6 @@
 package pw.prok.bootstrap.tasks;
 
+import pw.prok.bootstrap.LibraryArtifact;
 import pw.prok.bootstrap.Sync;
 import pw.prok.bootstrap.Utils;
 
@@ -14,11 +15,27 @@ public class InstallServer extends DefaultTask {
             System.err.println("Server file not exists: " + serverJar);
             return;
         }
+        make(serverDir, serverJar);
+    }
+
+    public static File make(File serverDir, File serverJar) throws Exception {
         System.out.println("Server directory: " + serverDir.getAbsolutePath());
-        File targetServerJar = new File(serverDir, serverJar.getName()).getCanonicalFile();
+        File targetServerBin = serverDir;
+        File targetServerJar;
+        Sync.KCauldronInfo info = Sync.getInfo(serverJar);
+        if (info.legacy) {
+            System.out.println("Found legacy server jar");
+            targetServerJar = new File(serverDir, serverJar.getName()).getCanonicalFile();
+        } else if (info.kcauldron) {
+            targetServerBin = Sync.binDir(serverDir);
+            targetServerJar = new LibraryArtifact("custom", info.channel, info.version).getTarget(targetServerBin);
+        } else {
+            throw new IllegalStateException("Found non-legacy and non-kcauldron jar, meh?");
+        }
         if (!targetServerJar.getCanonicalPath().equals(serverJar.getCanonicalPath())) {
             Utils.copyFile(serverJar, targetServerJar);
         }
-        Sync.sync(targetServerJar, serverDir, true);
+        Sync.sync(targetServerJar, targetServerBin, true);
+        return targetServerJar;
     }
 }

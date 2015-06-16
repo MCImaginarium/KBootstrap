@@ -4,17 +4,70 @@ import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class Sync {
+    public static File binDir(File serverDir) {
+        return new File(serverDir, "bin");
+    }
+
+    public static class KCauldronInfo {
+        public final boolean kcauldron;
+        public final boolean legacy;
+        public final String channel;
+        public final String version;
+        public final String[] classpath;
+
+        public KCauldronInfo(boolean kcauldron, boolean legacy, String channel, String version, String[] classpath) {
+            this.kcauldron = kcauldron;
+            this.legacy = legacy;
+            this.channel = channel;
+            this.version = version;
+            this.classpath = classpath;
+        }
+    }
+
+    public static KCauldronInfo getInfo(File jar) {
+        boolean kcauldron = false;
+        boolean legacy = true;
+        String channel = null;
+        String version = null;
+        String[] classpath = null;
+        try {
+            ZipFile serverZip = new ZipFile(jar);
+            ZipEntry entry = serverZip.getEntry("META-INF/MANIFEST.MF");
+            InputStream is = serverZip.getInputStream(entry);
+            Manifest manifest = new Manifest(is);
+            is.close();
+            serverZip.close();
+            Attributes attributes = manifest.getMainAttributes();
+            if (attributes.containsKey("KCauldron-Version")) {
+                kcauldron = true;
+                legacy = Boolean.parseBoolean(attributes.getValue("KCauldron-Legacy"));
+                version = attributes.getValue("KCauldron-Version");
+                channel = attributes.getValue("KCauldron-Channel");
+            } else {
+                version = attributes.getValue("Implementation-Version");
+                channel = "unknown";
+            }
+            classpath = attributes.getValue("Class-Path").split(" ");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new KCauldronInfo(kcauldron, legacy, channel, version, classpath);
+    }
+
     public static void parseLibraries(File jar, List<LibraryArtifact> artifacts) {
         try {
             ZipFile serverZip = new ZipFile(jar);
             ZipEntry entry = serverZip.getEntry("META-INF/MANIFEST.MF");
             InputStream is = serverZip.getInputStream(entry);
             Manifest manifest = new Manifest(is);
+            is.close();
+            serverZip.close();
             String cp = manifest.getMainAttributes().getValue("Class-Path");
             if (cp == null) return;
             for (String s : cp.split(" ")) {
@@ -22,8 +75,8 @@ public class Sync {
                     artifacts.add(new LibraryArtifact("net.minecraft", "server", "1.7.10", ".", "minecraft_server.1.7.10.jar"));
                     continue;
                 }
-                boolean library = s.startsWith("libraries/");
-                if (library) {
+                boolean legacy = s.startsWith("libraries/");
+                if (legacy) {
                     s = s.substring("libraries/".length());
                 }
                 int c = s.lastIndexOf('/');
@@ -34,7 +87,7 @@ public class Sync {
                 String artifact = s.substring((c = s.lastIndexOf('/')) + 1).trim();
                 s = s.substring(0, c);
                 String group = s.replace('/', '.');
-                artifacts.add(new LibraryArtifact(group, artifact, version, library ? "libraries/<group>/<artifact>/<version>" : null, filename));
+                artifacts.add(new LibraryArtifact(group, artifact, version, legacy ? "libraries/<group>/<artifact>/<version>" : null, legacy ? filename : null));
             }
         } catch (Exception e) {
             e.printStackTrace();
