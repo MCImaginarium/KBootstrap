@@ -17,13 +17,15 @@ public class Sync {
     public static class KCauldronInfo {
         public final boolean kcauldron;
         public final boolean legacy;
+        public final String group;
         public final String channel;
         public final String version;
         public final String[] classpath;
 
-        public KCauldronInfo(boolean kcauldron, boolean legacy, String channel, String version, String[] classpath) {
+        public KCauldronInfo(boolean kcauldron, boolean legacy, String group, String channel, String version, String[] classpath) {
             this.kcauldron = kcauldron;
             this.legacy = legacy;
+            this.group = group;
             this.channel = channel;
             this.version = version;
             this.classpath = classpath;
@@ -33,6 +35,7 @@ public class Sync {
     public static KCauldronInfo getInfo(File jar) {
         boolean kcauldron = false;
         boolean legacy = true;
+        String group = null;
         String channel = null;
         String version = null;
         String[] classpath = null;
@@ -49,8 +52,11 @@ public class Sync {
                 legacy = Boolean.parseBoolean(attributes.getValue("KCauldron-Legacy"));
                 version = attributes.getValue("KCauldron-Version");
                 channel = attributes.getValue("KCauldron-Channel");
+                group = attributes.getValue("KCauldron-Group");
+                if (group == null) group = "pw.prok";
             } else {
                 version = attributes.getValue("Implementation-Version");
+                group = "unknown";
                 channel = "unknown";
             }
             String cp = attributes.getValue("Class-Path");
@@ -58,7 +64,7 @@ public class Sync {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return new KCauldronInfo(kcauldron, legacy, channel, version, classpath);
+        return new KCauldronInfo(kcauldron, legacy, group, channel, version, classpath);
     }
 
     public static void parseLibraries(File jar, List<LibraryArtifact> artifacts) {
