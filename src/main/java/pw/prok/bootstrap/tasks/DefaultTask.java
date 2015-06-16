@@ -56,6 +56,7 @@ public abstract class DefaultTask {
         builder.directory(serverDir);
         builder.command(args);
         builder.environment().put("JAVA_HOME", javaHome);
+        builder.environment().put("KCAULDRON_HOME", serverDir.getCanonicalPath());
         builder.inheritIO();
         builder.start().waitFor();
     }

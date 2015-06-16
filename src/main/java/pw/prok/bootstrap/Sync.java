@@ -129,7 +129,7 @@ public class Sync {
     }
 
     public static File syncArtifact(LibraryArtifact artifact, File rootDir, boolean recursive) {
-        File artifactFile = new File(new File(rootDir, artifact.getRealLocation()), artifact.getRealFilename());
+        File artifactFile = artifact.getTarget(rootDir);
         if (!artifactFile.exists() || !checksum(artifactFile)) {
             System.out.print("Downloading " + artifact + "... ");
             try {
