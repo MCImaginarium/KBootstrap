@@ -24,16 +24,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Aether {
-    private static RemoteRepository sRepository;
     private static List<RemoteRepository> sRepositories;
     private static DefaultServiceLocator sLocator;
     private static RepositorySystem sRepositorySystem;
     private static LocalRepository sLocalRepository;
 
     static {
-        sRepository = new RemoteRepository.Builder("prok", "default", "https://prok.pw/repo").build();
         sRepositories = new ArrayList<RemoteRepository>();
-        sRepositories.add(sRepository);
+        sRepositories.add(new RemoteRepository.Builder("prok", "default", "https://prok.pw/repo").build());
+        sRepositories.add(new RemoteRepository.Builder("jcenter", "default", "https://jcenter.bintray.com/").build());
 
         sLocator = MavenRepositorySystemUtils.newServiceLocator();
         sLocator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);
