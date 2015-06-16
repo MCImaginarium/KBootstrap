@@ -28,7 +28,7 @@ public class InstallServer extends DefaultTask {
             targetServerJar = new File(serverDir, serverJar.getName()).getCanonicalFile();
         } else if (info.kcauldron) {
             targetServerBin = Sync.binDir(serverDir);
-            targetServerJar = new LibraryArtifact("custom", info.channel, info.version).getTarget(targetServerBin);
+            targetServerJar = new LibraryArtifact("pw.prok", "custom-" + info.channel, info.version).getTarget(targetServerBin);
         } else {
             throw new IllegalStateException("Found non-legacy and non-kcauldron jar, meh?");
         }

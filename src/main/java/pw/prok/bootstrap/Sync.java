@@ -44,7 +44,7 @@ public class Sync {
             is.close();
             serverZip.close();
             Attributes attributes = manifest.getMainAttributes();
-            if (attributes.containsKey("KCauldron-Version")) {
+            if (attributes.getValue("KCauldron-Version") != null) {
                 kcauldron = true;
                 legacy = Boolean.parseBoolean(attributes.getValue("KCauldron-Legacy"));
                 version = attributes.getValue("KCauldron-Version");
@@ -53,7 +53,8 @@ public class Sync {
                 version = attributes.getValue("Implementation-Version");
                 channel = "unknown";
             }
-            classpath = attributes.getValue("Class-Path").split(" ");
+            String cp = attributes.getValue("Class-Path");
+            classpath = cp == null ? new String[0] : cp.split(" ");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -61,36 +62,26 @@ public class Sync {
     }
 
     public static void parseLibraries(File jar, List<LibraryArtifact> artifacts) {
-        try {
-            ZipFile serverZip = new ZipFile(jar);
-            ZipEntry entry = serverZip.getEntry("META-INF/MANIFEST.MF");
-            InputStream is = serverZip.getInputStream(entry);
-            Manifest manifest = new Manifest(is);
-            is.close();
-            serverZip.close();
-            String cp = manifest.getMainAttributes().getValue("Class-Path");
-            if (cp == null) return;
-            for (String s : cp.split(" ")) {
-                if ("minecraft_server.1.7.10.jar".equals(s)) {
-                    artifacts.add(new LibraryArtifact("net.minecraft", "server", "1.7.10", ".", "minecraft_server.1.7.10.jar"));
-                    continue;
-                }
-                boolean legacy = s.startsWith("libraries/");
-                if (legacy) {
-                    s = s.substring("libraries/".length());
-                }
-                int c = s.lastIndexOf('/');
-                String filename = s.substring(c + 1);
-                s = s.substring(0, c);
-                String version = s.substring((c = s.lastIndexOf('/')) + 1).trim();
-                s = s.substring(0, c);
-                String artifact = s.substring((c = s.lastIndexOf('/')) + 1).trim();
-                s = s.substring(0, c);
-                String group = s.replace('/', '.');
-                artifacts.add(new LibraryArtifact(group, artifact, version, legacy ? "libraries/<group>/<artifact>/<version>" : null, legacy ? filename : null));
+        String[] cp = getInfo(jar).classpath;
+        if (cp == null) return;
+        for (String s : cp) {
+            if ("minecraft_server.1.7.10.jar".equals(s)) {
+                artifacts.add(new LibraryArtifact("net.minecraft", "server", "1.7.10", ".", "minecraft_server.1.7.10.jar"));
+                continue;
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+            boolean legacy = s.startsWith("libraries/");
+            if (legacy) {
+                s = s.substring("libraries/".length());
+            }
+            int c = s.lastIndexOf('/');
+            String filename = s.substring(c + 1);
+            s = s.substring(0, c);
+            String version = s.substring((c = s.lastIndexOf('/')) + 1).trim();
+            s = s.substring(0, c);
+            String artifact = s.substring((c = s.lastIndexOf('/')) + 1).trim();
+            s = s.substring(0, c);
+            String group = s.replace("../", "").replace('/', '.');
+            artifacts.add(new LibraryArtifact(group, artifact, version, legacy ? "libraries/<group>/<artifact>/<version>" : null, legacy ? filename : null));
         }
     }
 

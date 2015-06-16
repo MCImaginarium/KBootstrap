@@ -66,7 +66,7 @@ public final class LibraryArtifact {
         String version = mArtifact.getVersion();
         String classifier = mArtifact.getClassifier();
         String extension = mArtifact.getExtension();
-        classifier = classifier != null ? '-' + classifier : "";
+        classifier = classifier != null && classifier.length() > 0 ? ('-' + classifier) : "";
         return String.format("%s-%s%s.%s", artifactId, version, classifier, extension);
     }
 
