@@ -63,7 +63,6 @@ public class Main {
     private void start(String[] args) {
         try {
             cli = parser.parse(options, args, true);
-            System.out.println(Arrays.toString(cli.getArgs()));
             if (cli.hasOption(libraries.getOpt())) {
                 run(new Libraries());
             }
