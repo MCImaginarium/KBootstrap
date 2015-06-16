@@ -1,6 +1,5 @@
 package pw.prok.bootstrap.tasks;
 
-import org.eclipse.aether.artifact.Artifact;
 import pw.prok.bootstrap.Aether;
 import pw.prok.bootstrap.Main;
 
@@ -65,11 +64,14 @@ public abstract class DefaultTask {
 
     public abstract void make() throws Exception;
 
-    public static void postInstall(File serverDir, File serverJar) throws Exception{
-        for (String symlink : Main.instance.cli.getOptionValues(Main.instance.serverSymlinks.getOpt())) {
-            File symlinkPath = new File(serverDir, symlink);
-            Files.deleteIfExists(symlinkPath.toPath());
-            Files.createSymbolicLink(symlinkPath.toPath(), serverJar.toPath());
+    public static void postInstall(File serverDir, File serverJar) throws Exception {
+        String[] symlinks = Main.instance.cli.getOptionValues(Main.instance.serverSymlinks.getOpt());
+        if (symlinks != null) {
+            for (String symlink : symlinks) {
+                File symlinkPath = new File(serverDir, symlink);
+                Files.deleteIfExists(symlinkPath.toPath());
+                Files.createSymbolicLink(symlinkPath.toPath(), serverJar.toPath());
+            }
         }
     }
 }
