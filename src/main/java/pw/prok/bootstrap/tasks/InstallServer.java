@@ -9,7 +9,7 @@ public class InstallServer extends DefaultTask {
     @Override
     public void make() throws Exception {
         File serverDir = getServerDir();
-        File serverJar = new File(mMain.installServer.getValue()).getCanonicalFile();
+        File serverJar = new File(mMain.cli.getOptionValue(mMain.installServer.getOpt())).getCanonicalFile();
         if (!serverJar.exists()) {
             System.err.println("Server file not exists: " + serverJar);
             return;

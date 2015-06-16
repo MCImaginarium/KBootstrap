@@ -3,7 +3,7 @@ tasks.whenTaskAdded {
 }
 
 group = 'pw.prok'
-version = '0.0.2'
+version = '0.0.3'
 
 apply plugin: 'java'
 apply plugin: 'signing'
@@ -38,7 +38,8 @@ task signJars(type: Sign, dependsOn: [jar, appJar, 'generatePomFileForMavenPubli
     sign appJar
 }
 
-task signPom(type: Sign) {
+task signPom(type: Sign, dependsOn: 'generatePomFileForMavenPublication') {
+	outputs.upToDateWhen { false }
     sign file("${buildDir}/publications/maven/pom-default.xml")
 }
 
