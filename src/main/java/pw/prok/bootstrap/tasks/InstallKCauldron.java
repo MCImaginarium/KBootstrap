@@ -10,13 +10,13 @@ import java.io.File;
 
 public class InstallKCauldron extends DefaultTask {
     @Override
-    public void make() {
+    public void make() throws Exception {
         File serverDir = getServerDir();
         String artifactNotation = mMain.cli.getOptionValue(mMain.installKCauldron.getLongOpt());
         make(serverDir, artifactNotation);
     }
 
-    public static File make(File serverDir, String artifactNotation) {
+    public static File make(File serverDir, String artifactNotation) throws Exception {
         artifactNotation = shorthand(artifactNotation);
         Artifact artifact = new DefaultArtifact(artifactNotation);
         System.out.print("Resolve KCauldron version... ");
@@ -27,7 +27,9 @@ public class InstallKCauldron extends DefaultTask {
         if (legacy) {
             System.out.println("Found legacy server jar");
         }
-        return Sync.syncArtifact(new LibraryArtifact(artifact, legacy ? "." : null, null), legacy ? serverDir : Sync.binDir(serverDir), true);
+        artifact = artifact.setFile(Sync.syncArtifact(new LibraryArtifact(artifact, legacy ? "." : null, null), legacy ? serverDir : Sync.binDir(serverDir), true));
+        DefaultTask.postInstall(serverDir, artifact.getFile());
+        return artifact.getFile();
     }
 
     private static String shorthand(String s) {

@@ -36,6 +36,7 @@ public class InstallServer extends DefaultTask {
             Utils.copyFile(serverJar, targetServerJar);
         }
         Sync.sync(targetServerJar, targetServerBin, true);
+        DefaultTask.postInstall(serverDir, targetServerJar);
         return targetServerJar;
     }
 }

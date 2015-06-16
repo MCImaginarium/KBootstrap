@@ -1,10 +1,12 @@
 package pw.prok.bootstrap.tasks;
 
+import org.eclipse.aether.artifact.Artifact;
 import pw.prok.bootstrap.Aether;
 import pw.prok.bootstrap.Main;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -62,4 +64,12 @@ public abstract class DefaultTask {
     }
 
     public abstract void make() throws Exception;
+
+    public static void postInstall(File serverDir, File serverJar) throws Exception{
+        for (String symlink : Main.instance.cli.getOptionValues(Main.instance.serverSymlinks.getOpt())) {
+            File symlinkPath = new File(serverDir, symlink);
+            Files.deleteIfExists(symlinkPath.toPath());
+            Files.createSymbolicLink(symlinkPath.toPath(), serverJar.toPath());
+        }
+    }
 }

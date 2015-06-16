@@ -3,6 +3,7 @@ package pw.prok.bootstrap;
 import org.apache.commons.cli.*;
 import pw.prok.bootstrap.tasks.*;
 
+import java.io.File;
 import java.util.Arrays;
 
 public class Main {
@@ -10,6 +11,7 @@ public class Main {
 
     public final Option serverDir;
     public final Option jvmArgs;
+    public final Option serverSymlinks;
 
     public final Option installKCauldron;
     public final Option runKCauldron;
@@ -23,6 +25,8 @@ public class Main {
     public CommandLine cli;
     private boolean wasExecuted = false;
 
+    public static Main instance;
+
     public Main() {
         options = new Options();
 
@@ -33,6 +37,11 @@ public class Main {
         jvmArgs = new Option("j", "jvmArg", true, "Server's JVM arguments");
         jvmArgs.setArgName("args");
         options.addOption(jvmArgs);
+
+        serverSymlinks = new Option("s", "serverSymlinks", true, "Server's symlinks");
+        serverSymlinks.setArgName("paths");
+        serverSymlinks.setValueSeparator(File.pathSeparatorChar);
+        options.addOption(serverSymlinks);
 
         installKCauldron = new Option("k", "installKCauldron", true, "Install specified or latest KCauldron");
         installKCauldron.setArgName("version");
@@ -62,7 +71,7 @@ public class Main {
     }
 
     public static void main(String[] args) {
-        new Main().start(args);
+        (instance = new Main()).start(args);
     }
 
     private void start(String[] args) {
