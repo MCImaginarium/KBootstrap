@@ -35,7 +35,9 @@ public class InstallServer extends DefaultTask {
         if (!targetServerJar.getCanonicalPath().equals(serverJar.getCanonicalPath())) {
             Utils.copyFile(serverJar, targetServerJar);
         }
-        Sync.sync(targetServerJar, targetServerBin, true);
+        if (!Sync.sync(targetServerJar, targetServerBin, true)) {
+            throw new IllegalStateException("Could not install libraries");
+        }
         DefaultTask.postInstall(serverDir, targetServerJar);
         return targetServerJar;
     }

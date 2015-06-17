@@ -61,10 +61,7 @@ public class Aether {
             request.setArtifact(artifact);
             request.setRepositories(sRepositories);
             ArtifactResult result = sRepositorySystem.resolveArtifact(newSession(), request);
-            if (!result.isResolved()) {
-                throw new IllegalStateException("Could not resolve artifact " + artifact);
-            }
-            return result.getArtifact();
+            return result.isResolved() ? result.getArtifact() : null;
         } catch (Exception e) {
             e.printStackTrace();
             return null;

@@ -49,7 +49,7 @@ public class Sync {
             Attributes attributes = manifest.getMainAttributes();
             if (attributes.getValue("KCauldron-Version") != null) {
                 kcauldron = true;
-                legacy = Boolean.parseBoolean(attributes.getValue("KCauldron-Legacy"));
+                legacy = attributes.getValue("KCauldron-Legacy") == null || Boolean.parseBoolean(attributes.getValue("KCauldron-Legacy"));
                 version = attributes.getValue("KCauldron-Version");
                 channel = attributes.getValue("KCauldron-Channel");
                 group = attributes.getValue("KCauldron-Group");
@@ -100,7 +100,9 @@ public class Sync {
     public static boolean sync(List<LibraryArtifact> artifacts, File rootDir, boolean recursive) {
         try {
             for (LibraryArtifact artifact : artifacts) {
-                syncArtifact(artifact, rootDir, recursive);
+                if (syncArtifact(artifact, rootDir, recursive) == null) {
+                    return false;
+                }
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -149,7 +151,9 @@ public class Sync {
         if (recursive) {
             List<LibraryArtifact> artifacts = new ArrayList<LibraryArtifact>();
             parseLibraries(artifactFile, artifacts);
-            sync(artifacts, rootDir, true);
+            if (!sync(artifacts, rootDir, true)) {
+                return null;
+            }
         }
         return artifactFile;
     }

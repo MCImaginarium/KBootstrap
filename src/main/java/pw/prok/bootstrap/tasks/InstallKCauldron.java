@@ -23,13 +23,26 @@ public class InstallKCauldron extends DefaultTask {
         artifact = Aether.resolveLatestVersion(artifact);
         System.out.println(artifact.getVersion());
         System.out.println("Server directory: " + serverDir.getAbsolutePath());
+        Artifact baseArtifact = artifact;
+        artifact = Aether.resolveArtifact(artifact);
+        if (artifact == null) {
+            // Attempt to download legacy server file
+            artifact = new DefaultArtifact(baseArtifact.getGroupId(), baseArtifact.getArtifactId(), "server", "jar", baseArtifact.getVersion());
+            artifact = Aether.resolveArtifact(artifact);
+        }
+        if (artifact == null) {
+            throw new IllegalStateException("Could not resolve server jar");
+        }
         boolean legacy = Sync.getInfo(artifact.getFile()).legacy;
         if (legacy) {
             System.out.println("Found legacy server jar");
         }
-        artifact = artifact.setFile(Sync.syncArtifact(new LibraryArtifact(artifact, legacy ? "." : null, null), legacy ? serverDir : Sync.binDir(serverDir), true));
-        DefaultTask.postInstall(serverDir, artifact.getFile());
-        return artifact.getFile();
+        File file = Sync.syncArtifact(new LibraryArtifact(artifact, legacy ? "." : null, null), legacy ? serverDir : Sync.binDir(serverDir), true);
+        if (file == null) {
+            throw new IllegalStateException("Could not install libraries");
+        }
+        DefaultTask.postInstall(serverDir, file);
+        return file;
     }
 
     private static String shorthand(String s) {
