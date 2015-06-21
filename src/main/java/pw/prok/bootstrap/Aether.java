@@ -31,7 +31,7 @@ public class Aether {
 
     static {
         sRepositories = new ArrayList<RemoteRepository>();
-        sRepositories.add(new RemoteRepository.Builder("prok", "default", "https://prok.pw/repo").build());
+        sRepositories.add(new RemoteRepository.Builder("prok", "default", "https://repo.prok.pw/").build());
         sRepositories.add(new RemoteRepository.Builder("jcenter", "default", "https://jcenter.bintray.com/").build());
 
         sLocator = MavenRepositorySystemUtils.newServiceLocator();
