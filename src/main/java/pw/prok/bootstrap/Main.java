@@ -63,7 +63,7 @@ public class Main {
 
         libraries = new Option("l", "libraries", true, "Install specified libraries into server dir");
         libraries.setArgName("libraries");
-        libraries.setValueSeparator(';');
+        libraries.setValueSeparator(File.pathSeparatorChar);
         options.addOption(libraries);
 
         parser = new DefaultParser();

@@ -45,7 +45,7 @@ public abstract class DefaultTask {
         String javaHome = System.getProperty("java.home");
         String javaPath = String.format("%s/bin/java", javaHome);
 
-        List<String> args = new ArrayList<>();
+        List<String> args = new ArrayList<String>();
         args.add(javaPath);
         putJvmArgs(args);
         args.add("-jar");
@@ -58,6 +58,7 @@ public abstract class DefaultTask {
         builder.command(args);
         builder.environment().put("JAVA_HOME", javaHome);
         builder.environment().put("KCAULDRON_HOME", serverDir.getCanonicalPath());
+        builder.environment().put("KBOOTSTRAP_ACTIVE", "true");
         builder.inheritIO();
         builder.start().waitFor();
     }
