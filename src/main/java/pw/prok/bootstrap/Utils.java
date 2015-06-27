@@ -85,7 +85,9 @@ public class Utils {
     }
 
     public static String readChecksum(String algo, File file) {
-        String checksum = readFile(checksumFile(algo, file));
+        File checksumFile = checksumFile(algo, file);
+        if (!checksumFile.exists()) return null;
+        String checksum = readFile(checksumFile);
         return checksum == null ? null : checksum.trim();
     }
 

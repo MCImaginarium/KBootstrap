@@ -47,10 +47,10 @@ public class InstallKCauldron extends DefaultTask {
 
     private static String shorthand(String s) {
         if (s == null || "latest".equals(s)) {
-            return "pw.prok:KCauldron:jar:server:[0,)";
+            return "pw.prok:KCauldron:[0,)";
         }
         if (s.startsWith("backport-")) {
-            return String.format("pw.prok:KCauldron-Backport-%s:jar:server:[0,)", s.substring("backport-".length()));
+            return String.format("pw.prok:KCauldron-Backport-%s:[0,)", s.substring("backport-".length()));
         }
         return s;
     }
