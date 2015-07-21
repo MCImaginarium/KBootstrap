@@ -10,10 +10,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class Sync {
-    public static File binDir(File serverDir) {
-        return new File(serverDir, "bin");
-    }
-
     public static class KCauldronInfo {
         public final boolean kcauldron;
         public final boolean legacy;

@@ -12,11 +12,12 @@ public class InstallKCauldron extends DefaultTask {
     @Override
     public void make() throws Exception {
         File serverDir = getServerDir();
+        File binDir = getBinDir();
         String artifactNotation = mMain.cli.getOptionValue(mMain.installKCauldron.getLongOpt());
-        make(serverDir, artifactNotation);
+        make(serverDir, binDir, artifactNotation);
     }
 
-    public static File make(File serverDir, String artifactNotation) throws Exception {
+    public static File make(File serverDir, File binDir, String artifactNotation) throws Exception {
         artifactNotation = shorthand(artifactNotation);
         Artifact artifact = new DefaultArtifact(artifactNotation);
         System.out.print("Resolve KCauldron version... ");
@@ -37,7 +38,7 @@ public class InstallKCauldron extends DefaultTask {
         if (legacy) {
             System.out.println("Found legacy server jar");
         }
-        File file = Sync.syncArtifact(new LibraryArtifact(artifact, legacy ? "." : null, null), legacy ? serverDir : Sync.binDir(serverDir), true);
+        File file = Sync.syncArtifact(new LibraryArtifact(artifact, legacy ? "." : null, null), binDir, true);
         if (file == null) {
             throw new IllegalStateException("Could not install libraries");
         }

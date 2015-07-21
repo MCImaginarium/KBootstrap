@@ -10,6 +10,7 @@ public class Main {
     public final Options options;
 
     public final Option serverDir;
+    public final Option binDir;
     public final Option jvmArgs;
     public final Option serverSymlinks;
 
@@ -33,6 +34,10 @@ public class Main {
         serverDir = new Option("d", "serverDir", true, "Server root directory");
         serverDir.setArgName("dir");
         options.addOption(serverDir);
+
+        binDir = new Option("b", "binDir", true, "Server bin directory");
+        binDir.setArgName("dir");
+        options.addOption(binDir);
 
         jvmArgs = new Option("j", "jvmArg", true, "Server's JVM arguments");
         jvmArgs.setArgName("args");

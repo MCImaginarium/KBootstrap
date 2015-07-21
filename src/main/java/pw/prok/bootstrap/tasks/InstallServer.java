@@ -10,15 +10,16 @@ public class InstallServer extends DefaultTask {
     @Override
     public void make() throws Exception {
         File serverDir = getServerDir();
+        File binDir = getBinDir();
         File serverJar = new File(mMain.cli.getOptionValue(mMain.installServer.getOpt())).getCanonicalFile();
         if (!serverJar.exists()) {
             System.err.println("Server file not exists: " + serverJar);
             return;
         }
-        make(serverDir, serverJar);
+        make(serverDir, binDir, serverJar);
     }
 
-    public static File make(File serverDir, File serverJar) throws Exception {
+    public static File make(File serverDir, File binDir, File serverJar) throws Exception {
         System.out.println("Server directory: " + serverDir.getAbsolutePath());
         File targetServerBin = serverDir;
         File targetServerJar;
@@ -27,7 +28,7 @@ public class InstallServer extends DefaultTask {
             System.out.println("Found legacy server jar");
             targetServerJar = new File(serverDir, serverJar.getName()).getCanonicalFile();
         } else if (info.kcauldron) {
-            targetServerBin = Sync.binDir(serverDir);
+            targetServerBin = binDir;
             targetServerJar = new LibraryArtifact(info.group, info.channel, info.version).getTarget(targetServerBin);
         } else {
             throw new IllegalStateException("Found non-legacy and non-kcauldron jar, meh?");

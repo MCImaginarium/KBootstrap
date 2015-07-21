@@ -28,6 +28,21 @@ public abstract class DefaultTask {
         }
     }
 
+    public File getBinDir() {
+        String bin = mMain.cli.getOptionValue(mMain.binDir.getOpt());
+        File dir;
+        if (bin != null) {
+            dir = new File(bin);
+            if (!dir.isAbsolute()) {
+                dir = new File(getServerDir(), bin);
+            }
+        } else {
+            dir = new File(getServerDir(), "bin");
+        }
+        dir.mkdirs();
+        return dir;
+    }
+
     public void putJvmArgs(List<String> args) {
         String[] z = mMain.cli.getOptionValues(mMain.jvmArgs.getOpt());
         if (z == null) return;

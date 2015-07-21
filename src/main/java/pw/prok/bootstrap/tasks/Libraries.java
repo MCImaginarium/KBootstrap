@@ -9,7 +9,7 @@ import java.io.File;
 public class Libraries extends DefaultTask {
     @Override
     public void make() {
-        File serverDir = getServerDir();
+        File serverDir = getBinDir();
         File libraries = new File(serverDir, "libraries");
         for (String library : mMain.cli.getOptionValues(mMain.libraries.getOpt())) {
             Sync.syncArtifact(new LibraryArtifact(new DefaultArtifact(library)), libraries, true);
