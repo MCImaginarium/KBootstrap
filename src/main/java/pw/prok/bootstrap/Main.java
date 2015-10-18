@@ -13,6 +13,7 @@ public class Main {
     public final Option binDir;
     public final Option jvmArgs;
     public final Option serverSymlinks;
+    public final Option pidFile;
 
     public final Option installKCauldron;
     public final Option runKCauldron;
@@ -47,6 +48,10 @@ public class Main {
         serverSymlinks.setArgName("paths");
         serverSymlinks.setValueSeparator(File.pathSeparatorChar);
         options.addOption(serverSymlinks);
+
+        pidFile = new Option("p", "pidFile", true, "PID file for server");
+        pidFile.setArgName("file");
+        options.addOption(pidFile);
 
         installKCauldron = new Option("k", "installKCauldron", true, "Install specified or latest KCauldron");
         installKCauldron.setArgName("version");

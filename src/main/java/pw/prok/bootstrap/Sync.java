@@ -1,5 +1,7 @@
 package pw.prok.bootstrap;
 
+import pw.prok.damask.Damask;
+
 import java.io.File;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -12,15 +14,13 @@ import java.util.zip.ZipFile;
 public class Sync {
     public static class KCauldronInfo {
         public final boolean kcauldron;
-        public final boolean legacy;
         public final String group;
         public final String channel;
         public final String version;
         public final String[] classpath;
 
-        public KCauldronInfo(boolean kcauldron, boolean legacy, String group, String channel, String version, String[] classpath) {
+        public KCauldronInfo(boolean kcauldron, String group, String channel, String version, String[] classpath) {
             this.kcauldron = kcauldron;
-            this.legacy = legacy;
             this.group = group;
             this.channel = channel;
             this.version = version;
@@ -30,7 +30,6 @@ public class Sync {
 
     public static KCauldronInfo getInfo(File jar) {
         boolean kcauldron = false;
-        boolean legacy = true;
         String group = null;
         String channel = null;
         String version = null;
@@ -45,7 +44,6 @@ public class Sync {
             Attributes attributes = manifest.getMainAttributes();
             if (attributes.getValue("KCauldron-Version") != null) {
                 kcauldron = true;
-                legacy = attributes.getValue("KCauldron-Legacy") == null || Boolean.parseBoolean(attributes.getValue("KCauldron-Legacy"));
                 version = attributes.getValue("KCauldron-Version");
                 channel = attributes.getValue("KCauldron-Channel");
                 group = attributes.getValue("KCauldron-Group");
@@ -60,7 +58,7 @@ public class Sync {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return new KCauldronInfo(kcauldron, legacy, group, channel, version, classpath);
+        return new KCauldronInfo(kcauldron, group, channel, version, classpath);
     }
 
     public static void parseLibraries(File jar, List<LibraryArtifact> artifacts) {
@@ -128,12 +126,8 @@ public class Sync {
         if (!artifactFile.exists() || !checksum(artifactFile)) {
             System.out.print("Downloading " + artifact + "... ");
             try {
-                artifact.setArtifact(Aether.resolveArtifact(artifact.getArtifact()));
                 artifactFile.getParentFile().mkdirs();
-                if (artifactFile.exists()) {
-                    artifactFile.delete();
-                }
-                artifact.getArtifact().getFile().renameTo(artifactFile);
+                Damask.get().artifactResolve(artifact.getArtifact(), artifactFile, false);
                 for (String algorithm : ALGORITHMS) {
                     Utils.writeChecksum(algorithm, artifactFile);
                 }
@@ -152,6 +146,10 @@ public class Sync {
             }
         }
         return artifactFile;
+    }
+
+    public static void resolveLatestVersion(File basedir, LibraryArtifact lib) {
+
     }
 
     private static final String[] ALGORITHMS = {"sha-1", "md5"};

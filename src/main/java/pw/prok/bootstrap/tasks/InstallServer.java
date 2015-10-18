@@ -24,15 +24,8 @@ public class InstallServer extends DefaultTask {
         File targetServerBin = serverDir;
         File targetServerJar;
         Sync.KCauldronInfo info = Sync.getInfo(serverJar);
-        if (info.legacy) {
-            System.out.println("Found legacy server jar");
-            targetServerJar = new File(serverDir, serverJar.getName()).getCanonicalFile();
-        } else if (info.kcauldron) {
-            targetServerBin = binDir;
-            targetServerJar = new LibraryArtifact(info.group, info.channel, info.version).getTarget(targetServerBin);
-        } else {
-            throw new IllegalStateException("Found non-legacy and non-kcauldron jar, meh?");
-        }
+        targetServerBin = binDir;
+        targetServerJar = new LibraryArtifact(info.group, info.channel, info.version).getTarget(targetServerBin);
         if (!targetServerJar.getCanonicalPath().equals(serverJar.getCanonicalPath())) {
             Utils.copyFile(serverJar, targetServerJar);
         }
