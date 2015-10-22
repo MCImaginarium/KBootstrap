@@ -36,7 +36,6 @@ public class InstallKCauldron extends DefaultTask {
             jar = findJar(binDir, artifact);
             System.out.println("SUCCESS: " + artifact.getVersion());
         } catch (Exception ignored) {
-            ignored.printStackTrace();
             System.out.print("FAILED\nTrying to find latest local version... ");
             jar = findJar(binDir, artifact);
             if (jar != null) {
