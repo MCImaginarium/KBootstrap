@@ -1,7 +1,5 @@
 package pw.prok.bootstrap.tasks;
 
-import com.sk89q.warmroast.WarmRoast;
-import com.sun.tools.attach.VirtualMachine;
 import pw.prok.bootstrap.LibraryArtifact;
 import pw.prok.bootstrap.Main;
 import pw.prok.bootstrap.Sync;
@@ -15,13 +13,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Field;
-import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.ZipFile;
 
 public abstract class DefaultTask {
@@ -88,17 +88,11 @@ public abstract class DefaultTask {
     }
 
     public void runServer(File serverJar, File serverDir) throws Exception {
-        boolean warmRoast = mMain.cli.hasOption(mMain.warmRoast.getOpt());
         String javaHome = System.getProperty("java.home");
         String javaPath = String.format("%s/bin/java", javaHome);
 
         List<String> args = new ArrayList<String>();
         args.add(javaPath);
-        if (warmRoast) {
-            args.add("-Djava.library.path=" + javaHome + "/bin");
-            args.add("-cp");
-            args.add(new File(javaHome + "/../lib/tools.jar").getCanonicalPath());
-        }
         putJvmArgs(args);
         args.add("-jar");
         args.add(serverJar.getCanonicalPath());
@@ -115,32 +109,38 @@ public abstract class DefaultTask {
         Process process = builder.start();
         int pid = getPid(process);
         if (pid > 0) writePid(pid);
-        if (warmRoast) runWarmroast(pid);
+        if (mMain.cli.hasOption(mMain.warmRoast.getOpt())) runWarmroast(pid, javaHome, javaPath);
         process.waitFor();
     }
 
-    private void runWarmroast(int pid) {
+    private void runWarmroast(int pid, String javaHome, String javaPath) {
         try {
             IArtifact artifact = Builder.create().group("pw.prok").name("WarmRoastMappings").version("1.7.10").extension("zip").asArtifact();
             LibraryArtifact libraryArtifact = new LibraryArtifact(artifact);
             File mappings = Sync.syncArtifact(libraryArtifact, getBinDir(), false);
             File mappingsDir = unzip(mappings);
 
-            new Thread() {
-                @Override
-                public void run() {
-                    try {
-                        InetSocketAddress address = new InetSocketAddress("0.0.0.0", 23000);
-                        VirtualMachine vm = VirtualMachine.attach(String.valueOf(pid));
-                        WarmRoast warmRoast = new WarmRoast(vm, 100);
-                        warmRoast.getMapping().read(new File(mappingsDir, "joined.srg"), new File(mappingsDir, "methods.csv"));
-                        warmRoast.connect();
-                        warmRoast.start(address);
-                    } catch (Exception e) {
-                        new RuntimeException("Failed to run warmroast", e).printStackTrace();
-                    }
-                }
-            }.start();
+            List<String> classpath = new ArrayList<>();
+            classpath.add(new File(javaHome + "/../lib/tools.jar").getCanonicalPath());
+            classpath.addAll(Arrays.stream(((URLClassLoader) ClassLoader.getSystemClassLoader()).getURLs()).map(URL::getFile).collect(Collectors.toList()));
+
+            List<String> args = new ArrayList<String>();
+            args.add(javaPath);
+            args.add("-Djava.library.path=" + javaHome + "/bin");
+            args.add("-cp");
+            args.add(classpath.stream().collect(Collectors.joining(File.pathSeparator)));
+            args.add(WarmRoastExecutor.class.getName());
+            args.add("0.0.0.0");
+            args.add("23000");
+            args.add(String.valueOf(pid));
+            args.add(mappingsDir.getCanonicalPath());
+            System.out.println(args);
+
+            ProcessBuilder builder = new ProcessBuilder();
+            builder.command(args);
+            builder.environment().put("JAVA_HOME", javaHome);
+            builder.inheritIO();
+            Process process = builder.start();
 
             Thread.sleep(3000); // Wait until warmroast starting
 
