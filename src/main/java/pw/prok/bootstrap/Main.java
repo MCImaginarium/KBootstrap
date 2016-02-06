@@ -14,6 +14,7 @@ public class Main {
     public final Option jvmArgs;
     public final Option serverSymlinks;
     public final Option pidFile;
+    public final Option warmRoast;
 
     public final Option installKCauldron;
     public final Option runKCauldron;
@@ -52,6 +53,9 @@ public class Main {
         pidFile = new Option("p", "pidFile", true, "PID file for server");
         pidFile.setArgName("file");
         options.addOption(pidFile);
+
+        warmRoast = new Option("w", "warmRoast", false, "Run warmroast for this launch (useful with -r and -c)");
+        options.addOption(warmRoast);
 
         installKCauldron = new Option("k", "installKCauldron", true, "Install specified or latest KCauldron");
         installKCauldron.setArgName("version");

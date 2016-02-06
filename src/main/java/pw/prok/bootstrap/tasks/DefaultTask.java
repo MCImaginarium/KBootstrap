@@ -1,16 +1,28 @@
 package pw.prok.bootstrap.tasks;
 
+import com.sk89q.warmroast.WarmRoast;
+import com.sun.tools.attach.VirtualMachine;
+import pw.prok.bootstrap.LibraryArtifact;
 import pw.prok.bootstrap.Main;
+import pw.prok.bootstrap.Sync;
 import pw.prok.damask.Damask;
+import pw.prok.damask.dsl.Builder;
+import pw.prok.damask.dsl.IArtifact;
 
+import java.awt.*;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.lang.reflect.Field;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.ZipFile;
 
 public abstract class DefaultTask {
     protected Main mMain;
@@ -76,11 +88,17 @@ public abstract class DefaultTask {
     }
 
     public void runServer(File serverJar, File serverDir) throws Exception {
+        boolean warmRoast = mMain.cli.hasOption(mMain.warmRoast.getOpt());
         String javaHome = System.getProperty("java.home");
         String javaPath = String.format("%s/bin/java", javaHome);
 
         List<String> args = new ArrayList<String>();
         args.add(javaPath);
+        if (warmRoast) {
+            args.add("-Djava.library.path=" + javaHome + "/bin");
+            args.add("-cp");
+            args.add(new File(javaHome + "/../lib/tools.jar").getCanonicalPath());
+        }
         putJvmArgs(args);
         args.add("-jar");
         args.add(serverJar.getCanonicalPath());
@@ -97,8 +115,83 @@ public abstract class DefaultTask {
         Process process = builder.start();
         int pid = getPid(process);
         if (pid > 0) writePid(pid);
+        if (warmRoast) runWarmroast(pid);
         process.waitFor();
     }
+
+    private void runWarmroast(int pid) {
+        try {
+            IArtifact artifact = Builder.create().group("pw.prok").name("WarmRoastMappings").version("1.7.10").extension("zip").asArtifact();
+            LibraryArtifact libraryArtifact = new LibraryArtifact(artifact);
+            File mappings = Sync.syncArtifact(libraryArtifact, getBinDir(), false);
+            File mappingsDir = unzip(mappings);
+
+            new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        InetSocketAddress address = new InetSocketAddress("0.0.0.0", 23000);
+                        VirtualMachine vm = VirtualMachine.attach(String.valueOf(pid));
+                        WarmRoast warmRoast = new WarmRoast(vm, 100);
+                        warmRoast.getMapping().read(new File(mappingsDir, "joined.srg"), new File(mappingsDir, "methods.csv"));
+                        warmRoast.connect();
+                        warmRoast.start(address);
+                    } catch (Exception e) {
+                        new RuntimeException("Failed to run warmroast", e).printStackTrace();
+                    }
+                }
+            }.start();
+
+            Thread.sleep(3000); // Wait until warmroast starting
+
+            if (!openWebpage(new URL("http://127.0.0.1:23000"))) {
+                System.err.println("Failed to launch browser, please visit manually http://127.0.0.1:23000");
+            }
+        } catch (Exception e) {
+            new RuntimeException("Failed to run warmroast", e).printStackTrace();
+        }
+    }
+
+    private File unzip(File file) throws IOException {
+        File targetDir = new File(file.getCanonicalFile() + ".unzipped");
+        targetDir.mkdirs();
+        ZipFile zipFile = new ZipFile(file);
+        zipFile.stream().forEach((entry) -> {
+            File targetFile = new File(targetDir, entry.getName());
+            if (entry.isDirectory()) targetFile.mkdirs();
+            else if (!targetFile.exists()) {
+                try {
+                    Files.copy(zipFile.getInputStream(entry), targetFile.toPath());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        return targetDir;
+    }
+
+    public static boolean openWebpage(URL url) {
+        try {
+            return openWebpage(url.toURI());
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean openWebpage(URI uri) {
+        Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+        if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+            try {
+                desktop.browse(uri);
+                return true;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
 
     private void writePid(int pid) {
         try {

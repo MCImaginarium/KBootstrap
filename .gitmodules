@@ -1,0 +1,3 @@
+[submodule "third-party/WarmRoast"]
+	path = third-party/WarmRoast
+	url = https://github.com/sk89q/WarmRoast.git
