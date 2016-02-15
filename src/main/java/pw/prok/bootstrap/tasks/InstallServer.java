@@ -24,6 +24,8 @@ public class InstallServer extends DefaultTask {
         File targetServerBin = serverDir;
         File targetServerJar;
         Sync.KCauldronInfo info = Sync.getInfo(serverJar);
+        if (info == null)
+            throw new RuntimeException("Couldn't resolve main jar dependencies. Are you sure this correct server jar?");
         targetServerBin = binDir;
         targetServerJar = new LibraryArtifact(info.group, info.channel, info.version).getTarget(targetServerBin);
         if (!targetServerJar.getCanonicalPath().equals(serverJar.getCanonicalPath())) {

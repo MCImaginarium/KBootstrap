@@ -37,21 +37,23 @@ public class Sync {
         try {
             ZipFile serverZip = new ZipFile(jar);
             ZipEntry entry = serverZip.getEntry("META-INF/MANIFEST.MF");
+            if (entry == null) return null;
             InputStream is = serverZip.getInputStream(entry);
             Manifest manifest = new Manifest(is);
             is.close();
             serverZip.close();
             Attributes attributes = manifest.getMainAttributes();
-            if (attributes.getValue("KCauldron-Version") != null) {
+            String prefix = "KCauldron";
+            if (attributes.containsKey("KBootstrap-Implementation"))
+                prefix = attributes.getValue("KBootstrap-Implementation");
+            if (attributes.getValue(prefix + "-Version") != null) {
                 kcauldron = true;
-                version = attributes.getValue("KCauldron-Version");
-                channel = attributes.getValue("KCauldron-Channel");
-                group = attributes.getValue("KCauldron-Group");
+                version = attributes.getValue(prefix + "-Version");
+                channel = attributes.getValue(prefix + "-Channel");
+                group = attributes.getValue(prefix + "-Group");
                 if (group == null) group = "pw.prok";
             } else {
-                version = attributes.getValue("Implementation-Version");
-                group = "unknown";
-                channel = "unknown";
+                return null;
             }
             String cp = attributes.getValue("Class-Path");
             classpath = cp == null ? new String[0] : cp.split(" ");
@@ -62,7 +64,9 @@ public class Sync {
     }
 
     public static void parseLibraries(File jar, List<LibraryArtifact> artifacts) {
-        String[] cp = getInfo(jar).classpath;
+        KCauldronInfo info = getInfo(jar);
+        if (info == null) return;
+        String[] cp = info.classpath;
         if (cp == null) return;
         for (String s : cp) {
             if ("minecraft_server.1.7.10.jar".equals(s)) {
